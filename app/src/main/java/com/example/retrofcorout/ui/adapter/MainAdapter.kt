@@ -3,6 +3,7 @@ package com.example.retrofcorout.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.signature.ObjectKey
@@ -13,7 +14,9 @@ import com.example.retrofcorout.databinding.ItemLayoutBinding
 class MainAdapter(private val users: ArrayList<User>) :
     RecyclerView.Adapter<MainAdapter.DataViewHolder>() {
 
-    class DataViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    var clickListenerToEdit = MutableLiveData<User>()
+
+    inner class DataViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val binding = ItemLayoutBinding.bind(itemView)
         fun bind(user: User) {
             with(binding) {
@@ -24,6 +27,10 @@ class MainAdapter(private val users: ArrayList<User>) :
                         .load(user.avatar)
                         .signature(ObjectKey(System.currentTimeMillis().toString()))
                         .into(imageViewAvatar)
+                    root.setOnLongClickListener {
+                        clickListenerToEdit.postValue(user)
+                        true
+                    }
                 }
             }
         }
@@ -46,5 +53,9 @@ class MainAdapter(private val users: ArrayList<User>) :
             addAll(users)
         }
     }
+
+    fun deleteUser(position: Int) =
+        this.users.removeAt(position).id
+
 
 }
