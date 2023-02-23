@@ -17,18 +17,15 @@ import com.example.retrofcorout.ui.viewmodel.ResponseState
 
 private const val ARG_ID = "user_id"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [DetailFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class DetailFragment : Fragment() {
     private var _binding: FragmentDetailBinding? = null
     private val binding get() = _binding!!
     private var userId: String? = null
     private var userCurrent =
-        User("https://loremflickr.com/640/480/girl", "user@email", "", "User Name")
+        User("https://loremflickr.com/640/480/girl", "", "", "")
     private val viewModel: MainViewModel by activityViewModels()
+
+    private var clickedSave :Boolean = false   //to avoid false observing of previous data
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,11 +50,19 @@ class DetailFragment : Fragment() {
         binding.buttonSave.setOnClickListener {
             userCurrent.name = binding.textViewUserName.text.toString()
             userCurrent.email = binding.textViewUserEmail.text.toString()
-            userId?.let {
-                viewModel.putEditUser(userCurrent)
-            } ?: viewModel.postNewUser(userCurrent)
+            if (userCurrent.name.isEmpty() || userCurrent.email.isEmpty()) {
+                Toast.makeText(
+                    this.context,
+                    "Fill Name and e-mail to save",
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                userId?.let {
+                    viewModel.putEditUser(userCurrent)
+                } ?: viewModel.postNewUser(userCurrent)
+                clickedSave = true
+            }
         }
-        setupUI(User("https://loremflickr.com/640/480/girl", "user@email", "", "User Name"))
     }
 
     private fun setupUI(user: User) =
@@ -80,10 +85,16 @@ class DetailFragment : Fragment() {
 
         userId?.let { idUser->
             viewModel.editUser.observe(viewLifecycleOwner, Observer {
-                observed(it)
+               if (clickedSave) {
+                   observed(it)
+                   clickedSave = !clickedSave
+               }
             })
         } ?: viewModel.newUser.observe(viewLifecycleOwner, Observer {
-            observed(it)
+            if (clickedSave) {
+                observed(it)
+                clickedSave = !clickedSave
+            }
         })
     }
 
