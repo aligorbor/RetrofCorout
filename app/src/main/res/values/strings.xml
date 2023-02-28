@@ -5,4 +5,7 @@
     <string name="save">Save</string>
     <string name="user_name">User Name</string>
     <string name="user_email">User@Email</string>
+    <string name="favorite">Favorite</string>
+    <string name="edit">Edit</string>
+    <string name="remove">Remove</string>
 </resources>

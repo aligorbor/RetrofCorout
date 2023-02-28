@@ -3,6 +3,7 @@ package com.example.retrofcorout.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -11,14 +12,17 @@ import com.example.retrofcorout.R
 import com.example.retrofcorout.data.model.User
 import com.example.retrofcorout.databinding.ItemLayoutBinding
 
-class MainAdapter(private val users: ArrayList<User>) :
-    RecyclerView.Adapter<MainAdapter.DataViewHolder>() {
+class ListAdapter(private val users: ArrayList<User>, private val fragment: Fragment) :
+    RecyclerView.Adapter<ListAdapter.DataViewHolder>() {
 
     var clickListenerToEdit = MutableLiveData<User>()
+    var menuPosition: Int = 0
+    var menuUser: User? = null
 
     inner class DataViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val binding = ItemLayoutBinding.bind(itemView)
         fun bind(user: User) {
+            val position = bindingAdapterPosition
             with(binding) {
                 itemView.apply {
                     textViewUserName.text = user.name
@@ -27,10 +31,16 @@ class MainAdapter(private val users: ArrayList<User>) :
                         .load(user.avatar)
                         .signature(ObjectKey(System.currentTimeMillis().toString()))
                         .into(imageViewAvatar)
-                    root.setOnLongClickListener {
+                    //       root.setOnLongClickListener {
+                    root.setOnClickListener {
                         clickListenerToEdit.postValue(user)
-                        true
                     }
+                    root.setOnLongClickListener {
+                        menuPosition = position
+                        menuUser=user
+                        false
+                    }
+                    fragment.registerForContextMenu(root)
                 }
             }
         }

@@ -3,9 +3,9 @@ package com.example.retrofcorout.ui.view
 import android.os.Bundle
 import android.view.*
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -13,36 +13,33 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.retrofcorout.R
-import com.example.retrofcorout.data.api.ApiHelper
-import com.example.retrofcorout.data.api.RetrofitBuilder
 import com.example.retrofcorout.data.model.User
-import com.example.retrofcorout.databinding.FragmentListBinding
-import com.example.retrofcorout.ui.adapter.ListAdapter
-import com.example.retrofcorout.ui.base.ViewModelFactory
+import com.example.retrofcorout.databinding.FragmentFavoriteBinding
+import com.example.retrofcorout.ui.adapter.FavoriteAdapter
 import com.example.retrofcorout.ui.viewmodel.MainViewModel
 import com.example.retrofcorout.ui.viewmodel.ResponseState
 
-class ListFragment : Fragment() {
-    private var _binding: FragmentListBinding? = null
+private const val ARG_ID = "user_id"
+
+class FavoriteFragment : Fragment() {
+    private var _binding: FragmentFavoriteBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: MainViewModel by activityViewModels {
-        ViewModelFactory(
-            ApiHelper(
-                RetrofitBuilder.apiService
-            )
-        )
-    }
-    private lateinit var adapter: ListAdapter
+    private var userId: String? = null
+    private val viewModel: MainViewModel by activityViewModels()
+    private lateinit var adapter: FavoriteAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        arguments?.let {
+            userId = it.getString(ARG_ID)
+        }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentListBinding.inflate(inflater, container, false)
+        _binding = FragmentFavoriteBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -59,12 +56,13 @@ class ListFragment : Fragment() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.action_favorite -> {
-                        operate(Operation.FAVORITE_ALL)
+                        openFragment(DetailFragment.newInstance())
                         true
                     }
                     else -> false
                 }
             }
+
         })
 
         setupUI()
@@ -74,8 +72,8 @@ class ListFragment : Fragment() {
 
     private fun setupUI() =
         with(binding) {
-            recyclerView.layoutManager = LinearLayoutManager(this@ListFragment.context)
-            adapter = ListAdapter(arrayListOf(), this@ListFragment)
+            recyclerView.layoutManager = LinearLayoutManager(this@FavoriteFragment.context)
+            adapter = FavoriteAdapter(arrayListOf(), this@FavoriteFragment)
             recyclerView.addItemDecoration(
                 DividerItemDecoration(
                     recyclerView.context,
@@ -84,6 +82,7 @@ class ListFragment : Fragment() {
             )
             recyclerView.adapter = adapter
             adapter.clickListenerToEdit.observe(viewLifecycleOwner) {
+                //openFragment(DetailFragment.newInstance(it.id))
                 operate(Operation.DETAIL, null, it)
             }
 
@@ -99,11 +98,16 @@ class ListFragment : Fragment() {
 
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                     val position = viewHolder.bindingAdapterPosition
+//                    adapter.apply {
+//                        viewModel.deleteUser(deleteUser(position))
+//                        notifyItemRemoved(position)
+//                    }
                     operate(Operation.REMOVE, position)
                 }
             }).attachToRecyclerView(recyclerView)
 
             fab.setOnClickListener {
+                //       openFragment(DetailFragment.newInstance())
                 operate(Operation.NEW)
             }
         }
@@ -122,7 +126,7 @@ class ListFragment : Fragment() {
                             recyclerView.visibility = View.VISIBLE
                             progressBar.visibility = View.GONE
                             Toast.makeText(
-                                this@ListFragment.context,
+                                this@FavoriteFragment.context,
                                 resource.error.message,
                                 Toast.LENGTH_LONG
                             ).show()
@@ -154,7 +158,7 @@ class ListFragment : Fragment() {
                         is ResponseState.Error -> {
                             progressBar.visibility = View.GONE
                             Toast.makeText(
-                                this@ListFragment.context,
+                                this@FavoriteFragment.context,
                                 resource.error.message,
                                 Toast.LENGTH_LONG
                             ).show()
@@ -188,7 +192,7 @@ class ListFragment : Fragment() {
     override fun onContextItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.favorite_item -> {
-                operate(Operation.FAVORITE_ADD, null, adapter.menuUser)
+                operate(Operation.DETAIL, null, adapter.menuUser)
             }
             R.id.edit_item -> {
                 operate(Operation.DETAIL, null, adapter.menuUser)
@@ -208,12 +212,7 @@ class ListFragment : Fragment() {
             Operation.DETAIL -> {
                 user?.let { openFragment(DetailFragment.newInstance(user.id)) }
             }
-            Operation.FAVORITE_ADD -> {
-                openFragment(FavoriteFragment.newInstance())
-            }
-            Operation.FAVORITE_ALL -> {
-                openFragment(FavoriteFragment.newInstance())
-            }
+            Operation.FAVORITE -> {}
             Operation.REMOVE -> {
                 position?.let {
                     adapter.apply {
@@ -240,13 +239,18 @@ class ListFragment : Fragment() {
         _binding = null
     }
 
+
     companion object {
         @JvmStatic
-        fun newInstance() =
-            ListFragment()
+        fun newInstance(userId: String? = null) =
+            FavoriteFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_ID, userId)
+                }
+            }
     }
 
     enum class Operation {
-        DETAIL, REMOVE, NEW, FAVORITE_ADD, FAVORITE_ALL
+        DETAIL, FAVORITE, REMOVE, NEW
     }
 }
