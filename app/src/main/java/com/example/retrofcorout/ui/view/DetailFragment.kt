@@ -8,29 +8,30 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
-import com.bumptech.glide.Glide
-import com.bumptech.glide.signature.ObjectKey
 import com.example.retrofcorout.data.model.User
 import com.example.retrofcorout.databinding.FragmentDetailBinding
 import com.example.retrofcorout.ui.viewmodel.MainViewModel
 import com.example.retrofcorout.ui.viewmodel.ResponseState
 
 private const val ARG_ID = "user_id"
+private const val FROM_DAO = "from_dao"
 
 class DetailFragment : Fragment() {
     private var _binding: FragmentDetailBinding? = null
     private val binding get() = _binding!!
     private var userId: String? = null
     private var userCurrent =
-        User("https://loremflickr.com/640/480/girl", "", "", "")
+        User(id="", avatar ="https://loremflickr.com/640/480/girl", email = "", name = "")
     private val viewModel: MainViewModel by activityViewModels()
 
     private var clickedSave :Boolean = false   //to avoid false observing of previous data
+    private var fromDao :Boolean = false // true - observe ROOM; false - observe RETROFIT
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             userId = it.getString(ARG_ID)
+            fromDao = it.getBoolean(FROM_DAO)
         }
     }
 
@@ -57,45 +58,56 @@ class DetailFragment : Fragment() {
                     Toast.LENGTH_LONG
                 ).show()
             } else {
-                userId?.let {
-                    viewModel.putEditUser(userCurrent)
-                } ?: viewModel.postNewUser(userCurrent)
-                clickedSave = true
+                if (fromDao) {
+                    userId?.let{
+                        viewModel.updateUserDao(userCurrent)
+                    }
+                } else {
+                    userId?.let {
+                        viewModel.putEditUser(userCurrent)
+                    } ?: viewModel.postNewUser(userCurrent)
+                    clickedSave = true
+                }
             }
+            requireActivity().supportFragmentManager.popBackStack()
         }
     }
 
     private fun setupUI(user: User) =
         with(binding) {
-            textViewUserName.setText(user.name)
-            textViewUserEmail.setText(user.email)
-            Glide.with(imageViewAvatar.context)
-                .load(user.avatar)
-                .signature(ObjectKey(System.currentTimeMillis().toString()))
-                .into(imageViewAvatar)
+            varUser=user
             progressBar.visibility = View.GONE
         }
 
     private fun setupObservers(userId: String?) {
-        userId?.let{ idUser->
-            viewModel.getUser(idUser).observe(viewLifecycleOwner, Observer {
-                observed(it)
-            })
-        } ?: setupUI(userCurrent)
+        if (fromDao){
+            userId?.let{ idUser->
+                viewModel.getUserDao(userId).observe(viewLifecycleOwner, Observer {
+                    observed(it)
+                })
+            } ?: setupUI(userCurrent)
+        } else {
+            userId?.let{ idUser->
+                viewModel.getUser(idUser).observe(viewLifecycleOwner, Observer {
+                    observed(it)
+                })
+            } ?: setupUI(userCurrent)
 
-        userId?.let { idUser->
-            viewModel.editUser.observe(viewLifecycleOwner, Observer {
-               if (clickedSave) {
-                   observed(it)
-                   clickedSave = !clickedSave
-               }
+            userId?.let { idUser->
+                viewModel.editUser.observe(viewLifecycleOwner, Observer {
+                    if (clickedSave) {
+                        observed(it)
+                        clickedSave = !clickedSave
+                    }
+                })
+            } ?: viewModel.newUser.observe(viewLifecycleOwner, Observer {
+                if (clickedSave) {
+                    observed(it)
+                    clickedSave = !clickedSave
+                }
             })
-        } ?: viewModel.newUser.observe(viewLifecycleOwner, Observer {
-            if (clickedSave) {
-                observed(it)
-                clickedSave = !clickedSave
-            }
-        })
+        }
+
     }
 
     private fun observed(responseState: ResponseState<User>?) {
@@ -132,10 +144,11 @@ class DetailFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance(userId: String? = null) =
+        fun newInstance(userId: String? = null, fromDao: Boolean = false) =
             DetailFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_ID, userId)
+                    putBoolean(FROM_DAO, fromDao)
                 }
             }
     }

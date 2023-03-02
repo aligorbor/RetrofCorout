@@ -46,28 +46,10 @@ class FavoriteFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val menuHost: MenuHost = requireActivity()
-        menuHost.addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menu.clear()
-                menuInflater.inflate(R.menu.menu_main, menu)
-            }
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                return when (menuItem.itemId) {
-                    R.id.action_favorite -> {
-                        openFragment(DetailFragment.newInstance())
-                        true
-                    }
-                    else -> false
-                }
-            }
-
-        })
+        addOptionsMenu()
 
         setupUI()
         setupObservers()
-        viewModel.getUsers()
     }
 
     private fun setupUI() =
@@ -98,22 +80,14 @@ class FavoriteFragment : Fragment() {
 
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                     val position = viewHolder.bindingAdapterPosition
-//                    adapter.apply {
-//                        viewModel.deleteUser(deleteUser(position))
-//                        notifyItemRemoved(position)
-//                    }
                     operate(Operation.REMOVE, position)
                 }
             }).attachToRecyclerView(recyclerView)
 
-            fab.setOnClickListener {
-                //       openFragment(DetailFragment.newInstance())
-                operate(Operation.NEW)
-            }
         }
 
     private fun setupObservers() {
-        viewModel.listUsers.observe(viewLifecycleOwner, Observer {
+        viewModel.listUsersDao.observe(viewLifecycleOwner, Observer {
             with(binding) {
                 it?.let { resource ->
                     when (resource) {
@@ -186,43 +160,85 @@ class FavoriteFragment : Fragment() {
     ) {
         //  super.onCreateContextMenu(menu, v, menuInfo)
         val inflater: MenuInflater = requireActivity().menuInflater
-        inflater.inflate((R.menu.item_menu), menu)
+        inflater.inflate((R.menu.item_favorite_menu), menu)
     }
 
     override fun onContextItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.favorite_item -> {
+            R.id.edit_favorite_item -> {
                 operate(Operation.DETAIL, null, adapter.menuUser)
             }
-            R.id.edit_item -> {
-                operate(Operation.DETAIL, null, adapter.menuUser)
-            }
-            R.id.remove_item -> {
+            R.id.remove_favorite_item -> {
                 operate(Operation.REMOVE, adapter.menuPosition)
             }
         }
-        return super.onContextItemSelected(item)
+        return false
     }
 
     private fun operate(operation: Operation, position: Int? = null, user: User? = null) {
         when (operation) {
-            Operation.NEW -> {
-                openFragment(DetailFragment.newInstance())
-            }
             Operation.DETAIL -> {
-                user?.let { openFragment(DetailFragment.newInstance(user.id)) }
+                user?.let { openFragment(DetailFragment.newInstance(user.id,true)) }
             }
-            Operation.FAVORITE -> {}
             Operation.REMOVE -> {
                 position?.let {
                     adapter.apply {
-                        viewModel.deleteUser(deleteUser(position))
+                        viewModel.deleteUserDao(deleteUser(position))
                         notifyItemRemoved(position)
                     }
                 }
 
             }
+            Operation.REMOVE_ALL -> {
+                    adapter.apply {
+                        viewModel.deleteAllUsersDao()
+                        notifyDataSetChanged()
+                    }
+            }
+            Operation.FAVORITE_ALL -> {
+                openFragment(FavoriteFragment.newInstance())
+            }
         }
+    }
+
+    fun addOptionsMenu(addListMenu: Boolean = false){
+        val menuHost: MenuHost = requireActivity()
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menu.clear()
+                if (addListMenu) {
+                    menuInflater.inflate(R.menu.menu_main, menu)
+                } else {
+                    menuInflater.inflate(R.menu.menu_favorite_main, menu)
+                }
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return if (addListMenu) {
+                    when (menuItem.itemId) {
+                        R.id.action_favorite -> {
+                            operate(Operation.FAVORITE_ALL)
+                            true
+                        }
+                        else -> false
+                    }
+                } else {
+                    when (menuItem.itemId) {
+                        R.id.action_delete_favorites -> {
+                            operate(Operation.REMOVE_ALL)
+                            true
+                        }
+                        else -> false
+                    }
+                }
+            }
+
+        })
+    }
+
+    override fun onPause() {
+        super.onPause()
+        addOptionsMenu(true)
     }
 
     private fun openFragment(fragment: Fragment) {
@@ -251,6 +267,6 @@ class FavoriteFragment : Fragment() {
     }
 
     enum class Operation {
-        DETAIL, FAVORITE, REMOVE, NEW
+        DETAIL, REMOVE, REMOVE_ALL, FAVORITE_ALL
     }
 }

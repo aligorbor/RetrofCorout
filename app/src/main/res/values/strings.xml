@@ -8,4 +8,5 @@
     <string name="favorite">Favorite</string>
     <string name="edit">Edit</string>
     <string name="remove">Remove</string>
+    <string name="delete_all_favorite">Delete all favorite</string>
 </resources>

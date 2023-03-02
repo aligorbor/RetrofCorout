@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.retrofcorout.App
 import com.example.retrofcorout.R
 import com.example.retrofcorout.data.api.ApiHelper
 import com.example.retrofcorout.data.api.RetrofitBuilder
@@ -27,16 +28,11 @@ class ListFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: MainViewModel by activityViewModels {
         ViewModelFactory(
-            ApiHelper(
-                RetrofitBuilder.apiService
-            )
+            ApiHelper(RetrofitBuilder.apiService),
+            (requireActivity().application as App).userDao
         )
     }
     private lateinit var adapter: ListAdapter
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,23 +45,7 @@ class ListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val menuHost: MenuHost = requireActivity()
-        menuHost.addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menu.clear()
-                menuInflater.inflate(R.menu.menu_main, menu)
-            }
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                return when (menuItem.itemId) {
-                    R.id.action_favorite -> {
-                        operate(Operation.FAVORITE_ALL)
-                        true
-                    }
-                    else -> false
-                }
-            }
-        })
+        addOptionsMenu()
 
         setupUI()
         setupObservers()
@@ -136,12 +116,22 @@ class ListFragment : Fragment() {
             }
         })
 
-        viewModel.editUser.observe(viewLifecycleOwner, Observer {
-            viewModel.getUsers()
+        viewModel.editUser.observe(viewLifecycleOwner, Observer { response ->
+            //    viewModel.getUsers()
+            adapter.apply {
+                (response as? ResponseState.Success)?.let {
+                    notifyItemChanged(updateUser(it.data!!))
+                }
+            }
         })
 
-        viewModel.newUser.observe(viewLifecycleOwner, Observer {
-            viewModel.getUsers()
+        viewModel.newUser.observe(viewLifecycleOwner, Observer { response ->
+            //     viewModel.getUsers()
+            adapter.apply {
+                (response as? ResponseState.Success)?.let {
+                    notifyItemInserted(insertUser(it.data!!))
+                }
+            }
         })
 
         viewModel.delUser.observe(viewLifecycleOwner, Observer {
@@ -197,7 +187,7 @@ class ListFragment : Fragment() {
                 operate(Operation.REMOVE, adapter.menuPosition)
             }
         }
-        return super.onContextItemSelected(item)
+        return false
     }
 
     private fun operate(operation: Operation, position: Int? = null, user: User? = null) {
@@ -209,7 +199,10 @@ class ListFragment : Fragment() {
                 user?.let { openFragment(DetailFragment.newInstance(user.id)) }
             }
             Operation.FAVORITE_ADD -> {
-                openFragment(FavoriteFragment.newInstance())
+                user?.let {
+                    viewModel.insertUserDao(user)
+                    openFragment(FavoriteFragment.newInstance(user.id))
+                }
             }
             Operation.FAVORITE_ALL -> {
                 openFragment(FavoriteFragment.newInstance())
@@ -244,6 +237,32 @@ class ListFragment : Fragment() {
         @JvmStatic
         fun newInstance() =
             ListFragment()
+    }
+
+    fun addOptionsMenu() {
+        val menuHost: MenuHost = requireActivity()
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menu.clear()
+                menuInflater.inflate(R.menu.menu_main, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_favorite -> {
+                        operate(Operation.FAVORITE_ALL)
+                        true
+                    }
+                    else -> false
+                }
+            }
+        })
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        addOptionsMenu()
     }
 
     enum class Operation {
