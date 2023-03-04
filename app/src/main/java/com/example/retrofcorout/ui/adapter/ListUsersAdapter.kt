@@ -10,8 +10,8 @@ import com.example.retrofcorout.R
 import com.example.retrofcorout.data.model.User
 import com.example.retrofcorout.databinding.ItemLayoutBinding
 
-class ListAdapter(private val users: ArrayList<User>, private val fragment: Fragment) :
-    RecyclerView.Adapter<ListAdapter.DataViewHolder>() {
+class ListUsersAdapter(private val users: ArrayList<User>, private val fragment: Fragment) :
+    RecyclerView.Adapter<ListUsersAdapter.DataViewHolder>() {
 
     var clickListenerToEdit = MutableLiveData<User>()
     var menuPosition: Int = 0

@@ -55,7 +55,7 @@ class FavoriteFragment : Fragment() {
     private fun setupUI() =
         with(binding) {
             recyclerView.layoutManager = LinearLayoutManager(this@FavoriteFragment.context)
-            adapter = FavoriteAdapter(arrayListOf(), this@FavoriteFragment)
+            adapter = FavoriteAdapter(this@FavoriteFragment)
             recyclerView.addItemDecoration(
                 DividerItemDecoration(
                     recyclerView.context,
@@ -65,7 +65,7 @@ class FavoriteFragment : Fragment() {
             recyclerView.adapter = adapter
             adapter.clickListenerToEdit.observe(viewLifecycleOwner) {
                 //openFragment(DetailFragment.newInstance(it.id))
-                operate(Operation.DETAIL, null, it)
+                operate(Operation.DETAIL, it)
             }
 
             ItemTouchHelper(object :
@@ -79,22 +79,23 @@ class FavoriteFragment : Fragment() {
                 }
 
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                    val position = viewHolder.bindingAdapterPosition
-                    operate(Operation.REMOVE, position)
+                 //   val position = viewHolder.bindingAdapterPosition
+                    val item = (viewHolder as FavoriteAdapter.DataViewHolder).userInViewHolder
+                    operate(Operation.REMOVE, item)
                 }
             }).attachToRecyclerView(recyclerView)
 
         }
 
     private fun setupObservers() {
-        viewModel.listUsersDao.observe(viewLifecycleOwner, Observer {
+        viewModel.listUsersDao.observe(viewLifecycleOwner, Observer  {
             with(binding) {
                 it?.let { resource ->
                     when (resource) {
                         is ResponseState.Success -> {
                             recyclerView.visibility = View.VISIBLE
                             progressBar.visibility = View.GONE
-                            resource.data?.let { users -> retrieveList(users) }
+                            resource.data?.let { users -> users.let { adapter.submitList(it) } }
                         }
                         is ResponseState.Error -> {
                             recyclerView.visibility = View.VISIBLE
@@ -109,6 +110,7 @@ class FavoriteFragment : Fragment() {
                             progressBar.visibility = View.VISIBLE
                             recyclerView.visibility = View.GONE
                         }
+                        else -> {}
                     }
                 }
             }
@@ -146,13 +148,6 @@ class FavoriteFragment : Fragment() {
         })
     }
 
-    private fun retrieveList(users: List<User>) {
-        adapter.apply {
-            addUsers(users)
-            notifyDataSetChanged()
-        }
-    }
-
     override fun onCreateContextMenu(
         menu: ContextMenu,
         v: View,
@@ -166,33 +161,29 @@ class FavoriteFragment : Fragment() {
     override fun onContextItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.edit_favorite_item -> {
-                operate(Operation.DETAIL, null, adapter.menuUser)
+                operate(Operation.DETAIL, adapter.menuUser)
             }
             R.id.remove_favorite_item -> {
-                operate(Operation.REMOVE, adapter.menuPosition)
+                operate(Operation.REMOVE, adapter.menuUser)
             }
         }
         return false
     }
 
-    private fun operate(operation: Operation, position: Int? = null, user: User? = null) {
+    private fun operate(operation: Operation,  user: User? = null) {
         when (operation) {
             Operation.DETAIL -> {
                 user?.let { openFragment(DetailFragment.newInstance(user.id,true)) }
             }
             Operation.REMOVE -> {
-                position?.let {
                     adapter.apply {
-                        viewModel.deleteUserDao(deleteUser(position))
-                        notifyItemRemoved(position)
+                        user?.let { viewModel.deleteUserDao(it) }
                     }
-                }
 
             }
             Operation.REMOVE_ALL -> {
                     adapter.apply {
                         viewModel.deleteAllUsersDao()
-                        notifyDataSetChanged()
                     }
             }
             Operation.FAVORITE_ALL -> {

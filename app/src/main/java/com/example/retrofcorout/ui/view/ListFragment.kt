@@ -18,7 +18,7 @@ import com.example.retrofcorout.data.api.ApiHelper
 import com.example.retrofcorout.data.api.RetrofitBuilder
 import com.example.retrofcorout.data.model.User
 import com.example.retrofcorout.databinding.FragmentListBinding
-import com.example.retrofcorout.ui.adapter.ListAdapter
+import com.example.retrofcorout.ui.adapter.ListUsersAdapter
 import com.example.retrofcorout.ui.base.ViewModelFactory
 import com.example.retrofcorout.ui.viewmodel.MainViewModel
 import com.example.retrofcorout.ui.viewmodel.ResponseState
@@ -32,7 +32,7 @@ class ListFragment : Fragment() {
             (requireActivity().application as App).userDao
         )
     }
-    private lateinit var adapter: ListAdapter
+    private lateinit var adapter: ListUsersAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -55,7 +55,7 @@ class ListFragment : Fragment() {
     private fun setupUI() =
         with(binding) {
             recyclerView.layoutManager = LinearLayoutManager(this@ListFragment.context)
-            adapter = ListAdapter(arrayListOf(), this@ListFragment)
+            adapter = ListUsersAdapter(arrayListOf(), this@ListFragment)
             recyclerView.addItemDecoration(
                 DividerItemDecoration(
                     recyclerView.context,
