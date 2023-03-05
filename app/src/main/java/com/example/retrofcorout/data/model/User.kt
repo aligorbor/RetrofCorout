@@ -2,6 +2,7 @@ package com.example.retrofcorout.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.util.Date
 
 @Entity
 data class User(
@@ -9,7 +10,8 @@ data class User(
     val id: String,
     val avatar: String,
     var email: String,
-    var name: String
+    var name: String,
+    var dateBirth: Date?
 ) {
     override fun equals(other: Any?): Boolean {
        return (other as? User)?.let {

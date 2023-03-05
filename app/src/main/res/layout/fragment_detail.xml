@@ -39,11 +39,24 @@
             android:text="@{varUser.email}"
             android:hint="@string/user_email"
             android:inputType="textEmailAddress"
-            app:layout_constraintBottom_toTopOf="@+id/imageViewAvatar"
+            app:layout_constraintBottom_toTopOf="@+id/textViewUserBirthday"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewUserName"
             tools:text="User@Email" />
+
+        <EditText
+            android:id="@+id/textViewUserBirthday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/user_birthday"
+            android:inputType="date"
+            app:date_to_text="@{varUser.dateBirth}"
+            app:layout_constraintBottom_toTopOf="@+id/imageViewAvatar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewUserEmail"
+            tools:text="User Birthday" />
 
         <ImageView
             android:id="@+id/imageViewAvatar"
@@ -54,7 +67,7 @@
             app:layout_constraintBottom_toTopOf="@+id/buttonSave"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewUserEmail"
+            app:layout_constraintTop_toBottomOf="@+id/textViewUserBirthday"
             tools:ignore="contentDescription" />
 
         <Button

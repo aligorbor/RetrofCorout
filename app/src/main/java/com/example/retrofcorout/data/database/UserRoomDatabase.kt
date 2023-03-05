@@ -4,13 +4,17 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.retrofcorout.data.database.migration.Migration_1_2
 import com.example.retrofcorout.data.model.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = arrayOf(User::class), version = 1, exportSchema = false)
+@Database(entities = arrayOf(User::class), version = 2, exportSchema = false)
+@TypeConverters(DateConverter::class)
+
 abstract class UserRoomDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
 
@@ -28,6 +32,8 @@ abstract class UserRoomDatabase : RoomDatabase() {
                     "user_database"
                 )
                     .fallbackToDestructiveMigration() // Wipes and rebuilds instead of migrating if no Migration object.
+                 //   .allowMainThreadQueries() //Only for examples and testing
+                    .addMigrations(Migration_1_2())
                     .addCallback(UserDatabaseCallback(scope))
                     .build()
                 INSTANCE = instance

@@ -7,4 +7,7 @@
     <string name="edit">Edit</string>
     <string name="remove">Remove</string>
     <string name="delete_all_favorite">Delete all favorite</string>
+    <string name="user_birthday">User Birthday</string>
+    <string name="date_format">MMM dd, yyyy</string>
+
 </resources>

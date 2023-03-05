@@ -8,10 +8,14 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import com.example.retrofcorout.R
 import com.example.retrofcorout.data.model.User
 import com.example.retrofcorout.databinding.FragmentDetailBinding
 import com.example.retrofcorout.ui.viewmodel.MainViewModel
 import com.example.retrofcorout.ui.viewmodel.ResponseState
+import java.text.ParsePosition
+import java.text.SimpleDateFormat
+import java.util.*
 
 private const val ARG_ID = "user_id"
 private const val FROM_DAO = "from_dao"
@@ -21,7 +25,7 @@ class DetailFragment : Fragment() {
     private val binding get() = _binding!!
     private var userId: String? = null
     private var userCurrent =
-        User(id="", avatar ="https://loremflickr.com/640/480/girl", email = "", name = "")
+        User(id="", avatar ="https://loremflickr.com/640/480/girl", email = "", name = "", dateBirth = Date())
     private val viewModel: MainViewModel by activityViewModels()
 
     private var clickedSave :Boolean = false   //to avoid false observing of previous data
@@ -51,10 +55,14 @@ class DetailFragment : Fragment() {
         binding.buttonSave.setOnClickListener {
             userCurrent.name = binding.textViewUserName.text.toString()
             userCurrent.email = binding.textViewUserEmail.text.toString()
-            if (userCurrent.name.isEmpty() || userCurrent.email.isEmpty()) {
+            val strFormat = view.context.getString(R.string.date_format)
+            val myFormat = SimpleDateFormat(strFormat, Locale.getDefault(Locale.Category.FORMAT))
+            val dateBirth: Date? = myFormat.parse(binding.textViewUserBirthday.text.toString(), ParsePosition(0))
+            userCurrent.dateBirth = dateBirth
+            if (userCurrent.name.isEmpty() || userCurrent.email.isEmpty() || userCurrent.dateBirth==null) {
                 Toast.makeText(
                     this.context,
-                    "Fill Name and e-mail to save",
+                    "Name, E-mail and Birthday must be filled to save",
                     Toast.LENGTH_LONG
                 ).show()
             } else {

@@ -62,7 +62,8 @@ import com.example.retrofcorout.databinding.ItemLayoutBinding
             override fun areContentsTheSame(oldItem: User, newItem: User): Boolean {
                return oldItem.avatar == newItem.avatar &&
                       oldItem.name == newItem.name &&
-                      oldItem.email == newItem.email
+                      oldItem.email == newItem.email &&
+                      oldItem.dateBirth == newItem.dateBirth
             }
 
         }
