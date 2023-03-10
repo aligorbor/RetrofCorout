@@ -8,6 +8,8 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.onNavDestinationSelected
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -44,12 +46,11 @@ class ListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+            addOptionsMenu()
+            setupUI()
+            setupObservers()
+            viewModel.getUsers()
 
-        addOptionsMenu()
-
-        setupUI()
-        setupObservers()
-        viewModel.getUsers()
     }
 
     private fun setupUI() =
@@ -120,7 +121,9 @@ class ListFragment : Fragment() {
             //    viewModel.getUsers()
             adapter.apply {
                 (response as? ResponseState.Success)?.let {
-                    notifyItemChanged(updateUser(it.data!!))
+                    it.data?.let { user ->
+                        notifyItemChanged(updateUser(user))
+                    }
                 }
             }
         })
@@ -193,19 +196,29 @@ class ListFragment : Fragment() {
     private fun operate(operation: Operation, position: Int? = null, user: User? = null) {
         when (operation) {
             Operation.NEW -> {
-                openFragment(DetailFragment.newInstance())
+                //         openFragment(DetailFragment.newInstance())
+                val action = ListFragmentDirections.actionUsersDestToDetailDest()
+                findNavController().navigate(action)
             }
             Operation.DETAIL -> {
-                user?.let { openFragment(DetailFragment.newInstance(user.id)) }
+                user?.let {
+                    //     openFragment(DetailFragment.newInstance(user.id))
+                    val action = ListFragmentDirections.actionUsersDestToDetailDest(user.id)
+                    findNavController().navigate(action)
+                }
             }
             Operation.FAVORITE_ADD -> {
                 user?.let {
                     viewModel.insertUserDao(user)
-                    openFragment(FavoriteFragment.newInstance(user.id))
+                    // openFragment(FavoriteFragment.newInstance(user.id))
+                    val action = ListFragmentDirections.actionUsersDestToFavoriteDest()
+                    findNavController().navigate(action)
                 }
             }
             Operation.FAVORITE_ALL -> {
-                openFragment(FavoriteFragment.newInstance())
+                //    openFragment(FavoriteFragment.newInstance())
+                val action = ListFragmentDirections.actionUsersDestToFavoriteDest()
+                findNavController().navigate(action)
             }
             Operation.REMOVE -> {
                 position?.let {
@@ -248,22 +261,27 @@ class ListFragment : Fragment() {
             }
 
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                return when (menuItem.itemId) {
-                    R.id.action_favorite -> {
-                        operate(Operation.FAVORITE_ALL)
-                        true
-                    }
-                    else -> false
-                }
+                return menuItem.onNavDestinationSelected(findNavController())
+//                return when (menuItem.itemId) {
+//                    R.id.action_favorite -> {
+//                        operate(Operation.FAVORITE_ALL)
+//                        true
+//                    }
+//                    else -> false
+//                }
             }
         })
 
     }
 
-    override fun onResume() {
-        super.onResume()
-        addOptionsMenu()
-    }
+
+//    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+//        inflater.inflate(R.menu.menu_main, menu)
+//    }
+//
+//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+//        return item.onNavDestinationSelected(findNavController())
+//    }
 
     enum class Operation {
         DETAIL, REMOVE, NEW, FAVORITE_ADD, FAVORITE_ALL

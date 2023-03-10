@@ -9,5 +9,6 @@
     <string name="delete_all_favorite">Delete all favorite</string>
     <string name="user_birthday">User Birthday</string>
     <string name="date_format">MMM dd, yyyy</string>
+    <string name="users">Users</string>
 
 </resources>

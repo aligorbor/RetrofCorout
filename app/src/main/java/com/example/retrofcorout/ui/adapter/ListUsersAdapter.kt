@@ -61,7 +61,7 @@ class ListUsersAdapter(private val users: ArrayList<User>, private val fragment:
 
     fun updateUser(user: User) : Int {
         val pos = this.users.indexOf(user)
-        this.users.set(pos, user)
+        if (pos >= 0) {this.users.set(pos, user)}
         return  pos
     }
 

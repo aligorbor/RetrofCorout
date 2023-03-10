@@ -8,6 +8,8 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.onNavDestinationSelected
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -110,7 +112,6 @@ class FavoriteFragment : Fragment() {
                             progressBar.visibility = View.VISIBLE
                             recyclerView.visibility = View.GONE
                         }
-                        else -> {}
                     }
                 }
             }
@@ -173,7 +174,12 @@ class FavoriteFragment : Fragment() {
     private fun operate(operation: Operation,  user: User? = null) {
         when (operation) {
             Operation.DETAIL -> {
-                user?.let { openFragment(DetailFragment.newInstance(user.id,true)) }
+                user?.let {
+              //      openFragment(DetailFragment.newInstance(user.id,true))
+                    val action = FavoriteFragmentDirections.actionFavoriteDestToDetailDest(user.id,true)
+                    findNavController().navigate(action)
+                }
+
             }
             Operation.REMOVE -> {
                     adapter.apply {
@@ -186,9 +192,9 @@ class FavoriteFragment : Fragment() {
                         viewModel.deleteAllUsersDao()
                     }
             }
-            Operation.FAVORITE_ALL -> {
-                openFragment(FavoriteFragment.newInstance())
-            }
+//            Operation.FAVORITE_ALL -> {
+//                openFragment(FavoriteFragment.newInstance())
+//            }
         }
     }
 
@@ -206,13 +212,15 @@ class FavoriteFragment : Fragment() {
 
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return if (addListMenu) {
-                    when (menuItem.itemId) {
-                        R.id.action_favorite -> {
-                            operate(Operation.FAVORITE_ALL)
-                            true
-                        }
-                        else -> false
-                    }
+                    menuItem.onNavDestinationSelected(findNavController())
+//                    when (menuItem.itemId) {
+//                        R.id.favorite_dest -> {
+//                            operate(Operation.FAVORITE_ALL)
+//                            true
+//                        }
+//                        else -> false
+//                    }
+
                 } else {
                     when (menuItem.itemId) {
                         R.id.action_delete_favorites -> {
@@ -229,7 +237,7 @@ class FavoriteFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        addOptionsMenu(true)
+ //       addOptionsMenu(true)
     }
 
     private fun openFragment(fragment: Fragment) {
@@ -258,6 +266,6 @@ class FavoriteFragment : Fragment() {
     }
 
     enum class Operation {
-        DETAIL, REMOVE, REMOVE_ALL, FAVORITE_ALL
+        DETAIL, REMOVE, REMOVE_ALL   //, FAVORITE_ALL
     }
 }

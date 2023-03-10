@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.retrofcorout.ui.view">
     <item
-        android:id="@+id/action_favorite"
+        android:id="@+id/favorite_dest"
         android:orderInCategory="100"
         android:title="@string/favorite"
         app:showAsAction="never" />

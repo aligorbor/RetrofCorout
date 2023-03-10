@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/users_dest">
+
+    <fragment
+        android:id="@+id/users_dest"
+        android:name="com.example.retrofcorout.ui.view.ListFragment"
+        android:label="Users"
+        tools:layout="@layout/fragment_list" >
+        <action
+            android:id="@+id/action_users_dest_to_favorite_dest"
+            app:destination="@id/favorite_dest" />
+
+        <action
+            android:id="@+id/action_users_dest_to_detail_dest"
+            app:destination="@id/detail_dest"
+            app:popUpToSaveState= "true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/favorite_dest"
+        android:name="com.example.retrofcorout.ui.view.FavoriteFragment"
+        android:label="Favorite"
+        tools:layout="@layout/fragment_favorite" >
+        <action
+            android:id="@+id/action_favorite_dest_to_detail_dest"
+            app:destination="@id/detail_dest" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/detail_dest"
+        android:name="com.example.retrofcorout.ui.view.DetailFragment"
+        android:label="User" >
+        <argument
+            android:name="userId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="fromDao"
+            app:argType="boolean"
+            android:defaultValue="false"/>
+    </fragment>
+
+</navigation>

@@ -8,6 +8,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.example.retrofcorout.R
 import com.example.retrofcorout.data.model.User
 import com.example.retrofcorout.databinding.FragmentDetailBinding
@@ -33,10 +35,13 @@ class DetailFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            userId = it.getString(ARG_ID)
-            fromDao = it.getBoolean(FROM_DAO)
-        }
+        val safeArgs: DetailFragmentArgs by navArgs()
+        userId = safeArgs.userId
+        fromDao = safeArgs.fromDao
+//        arguments?.let {
+//            userId = it.getString(ARG_ID)
+//            fromDao = it.getBoolean(FROM_DAO)
+//        }
     }
 
     override fun onCreateView(
@@ -77,7 +82,8 @@ class DetailFragment : Fragment() {
                     clickedSave = true
                 }
             }
-            requireActivity().supportFragmentManager.popBackStack()
+      //      requireActivity().supportFragmentManager.popBackStack()
+            findNavController().popBackStack()
         }
     }
 
